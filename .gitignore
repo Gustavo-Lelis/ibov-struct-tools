@@ -3,7 +3,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-src/main/resources/b3_stocks_1994_2020.csv
+*.csv
 
 ### IntelliJ IDEA ###
 .idea/
