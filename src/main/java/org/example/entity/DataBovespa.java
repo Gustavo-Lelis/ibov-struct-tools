@@ -1,8 +1,6 @@
 package org.example.entity;
 
-import java.time.LocalDate;
-
-public class DateBovespa {
+public class DataBovespa {
 
     private int index;
     private String dateTime;
@@ -13,7 +11,7 @@ public class DateBovespa {
     private double low;
     private double volume;
 
-    public DateBovespa(int index, String dateTime, String ticket, double open, double close, double high, double low, double volume) {
+    public DataBovespa(int index, String dateTime, String ticket, double open, double close, double high, double low, double volume) {
         this.index = index;
         this.dateTime = dateTime;
         this.ticket = ticket;
@@ -24,7 +22,7 @@ public class DateBovespa {
         this.volume = volume;
     }
 
-    public DateBovespa() {}
+    public DataBovespa() {}
 
     public int getIndex() {
         return index;

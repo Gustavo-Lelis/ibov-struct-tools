@@ -1,7 +1,8 @@
 package org.example.repository;
 
 import com.opencsv.CSVWriter;
-import org.example.entity.DateBovespa;
+import org.example.entity.DataBovespa;
+
 
 import java.io.*;
 import java.nio.file.Files;
@@ -12,8 +13,8 @@ import java.time.format.DateTimeFormatter;
 
 public class FileRepository {
 
-    public DateBovespa[] getDateBovespa(String fileName) throws FileNotFoundException {
-        DateBovespa[] data = new DateBovespa[1000];
+    public DataBovespa[] getDataBovespa() throws FileNotFoundException {
+        DataBovespa[] data = new DataBovespa[1000];
         int index = 0;
 
         InputStream is = getClass().getClassLoader().getResourceAsStream("b3_stocks_1994_2020.csv");
@@ -24,32 +25,16 @@ public class FileRepository {
 
         try (BufferedReader br = new BufferedReader(new InputStreamReader(is)))
         {
-            br.readLine(); // Pular o cabecalho
+            br.readLine();
             String linha;
             while ((linha = br.readLine()) != null) {
-                String[] line = linha.split(",");
-                if (line.length >= 7) {
-                    try {
-                        LocalDate dataFormatada = LocalDate.parse(line[0].trim());
-                        //Formatar para o estilo desejado (dd-MM-yyyy)
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-                        String dataFormatadaStr = dataFormatada.format(formatter);
-
-                        double open = Double.parseDouble(line[2].trim());
-                        double close = Double.parseDouble(line[3].trim());
-                        double high = Double.parseDouble(line[4].trim());
-                        double low = Double.parseDouble(line[5].trim());
-                        double volume = Double.parseDouble(line[6].trim());
-
-                        if (index == data.length) {
-                            data = aumentarCapacidade(data);
-                        }
-
-                        data[index] = new DateBovespa(index, dataFormatadaStr, line[1], open, close, high, low, volume);
-                        index++;
-                    } catch (NumberFormatException e) {
-                        System.out.println(" ");
+                DataBovespa dado = parseLinhaParaDataBovespa(linha, index);
+                if (dado != null) {
+                    if (index == data.length) {
+                        data = aumentarCapacidade(data);
                     }
+                    data[index] = dado;
+                    index++;
                 }
             }
         } catch (IOException e) {
@@ -58,7 +43,36 @@ public class FileRepository {
         return data;
     }
 
-    public void writeToFile(String outFileName, DateBovespa[] dataBovespa) {
+
+    private DataBovespa parseLinhaParaDataBovespa(String linha, int index) {
+        String[] colunas = linha.split(",");
+
+        if (colunas.length < 7) {
+            return null;
+        }
+
+        try {
+            // Converte a data para o formato desejado
+            LocalDate dataOriginal = LocalDate.parse(colunas[0].trim());
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+            String dataFormatadaStr = dataOriginal.format(formatter);
+
+            String ticket = colunas[1].trim();
+            double open = Double.parseDouble(colunas[2].trim());
+            double close = Double.parseDouble(colunas[3].trim());
+            double high = Double.parseDouble(colunas[4].trim());
+            double low = Double.parseDouble(colunas[5].trim());
+            double volume = Double.parseDouble(colunas[6].trim());
+
+
+            return new DataBovespa(index, dataFormatadaStr, ticket, open, close, high, low, volume);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public void writeToFile(String outFileName, DataBovespa[] dataBovespa) {
         try {
             Path outputPath = Paths.get(outFileName);
             Path outputDir = outputPath.getParent();
@@ -70,7 +84,7 @@ public class FileRepository {
             try (CSVWriter writer = new CSVWriter(new FileWriter(outFileName))) {
                 String[] head = {"dataTime", "ticket", "open", "close", "high", "low", "volume"};
                 writer.writeNext(head);
-                for (DateBovespa c : dataBovespa) {
+                for (DataBovespa c : dataBovespa) {
                     if (c != null) {
                         writer.writeNext(c.toCSV());
                     }
@@ -81,9 +95,51 @@ public class FileRepository {
         }
     }
 
+    public DataBovespa[] getMaxVolumeRecordPerDay(String outfile, DataBovespa[] dados) throws FileNotFoundException {
+        DataBovespa[] dataAux = new DataBovespa[dados.length];
+        int index = 0;
 
-    public DateBovespa[] aumentarCapacidade(DateBovespa[] dateOrigin){
-        DateBovespa[] novoArray = new DateBovespa[dateOrigin.length * 2];
+        try{
+            int i = 0;
+            while (i < dados.length) {
+                if (dados[i] == null) {
+                    i++;
+                    continue;
+                }
+                DataBovespa registroAtual = dados[i];
+                DataBovespa maxRegistro = registroAtual; // inicializa com o primeiro registro do dia
+                String dataAtual = registroAtual.getDateTime(); // pega a data corrente
+
+                // Percorre todos os registros com a mesma data
+                int j = i + 1;
+                while (j < dados.length &&
+                        dados[j] != null &&
+                        dados[j].getDateTime() != null &&
+                        dados[j].getDateTime().equals(dataAtual)) {
+
+                    if (dados[j].getVolume() > maxRegistro.getVolume()) {
+                        maxRegistro = dados[j];
+                    }
+                    j++;
+                }
+                dataAux[index++] = maxRegistro;
+                i = j;
+            }
+            DataBovespa[] resultado = new DataBovespa[index];
+            System.arraycopy(dataAux, 0, resultado, 0, index);
+
+            writeToFile(outfile, resultado);
+
+            return resultado;
+        }catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+    public DataBovespa[] aumentarCapacidade(DataBovespa[] dateOrigin){
+        DataBovespa[] novoArray = new DataBovespa[dateOrigin.length * 2];
         System.arraycopy(dateOrigin, 0, novoArray, 0, dateOrigin.length);
         return novoArray;
     }
