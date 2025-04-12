@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
-// CSVUtils.java
+
 public class CSVUtils {
 
     public static DataBovespa[] readFromCSV(String resourceName) throws IOException {
@@ -30,14 +30,14 @@ public class CSVUtils {
                 DataBovespa dado = ParseUtils.parseLinha(linha, index);
                 if (dado != null) {
                     if (index == data.length) {
-                        data = ArrayUtils.aumentarCapacidade(data); // extraído também
+                        data = ArrayUtils.aumentarCapacidade(data);
                     }
                     data[index++] = dado;
                 }
             }
         }
 
-        return Arrays.copyOf(data, index); // Remove nulls no final
+        return Arrays.copyOf(data, index);
     }
 
     public static void writeToCSV(String outFileName, DataBovespa[] dados) {

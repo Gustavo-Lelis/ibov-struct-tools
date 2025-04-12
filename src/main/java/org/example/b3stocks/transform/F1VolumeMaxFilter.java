@@ -38,7 +38,9 @@ public class F1VolumeMaxFilter {
                 i = j;
             }
             DataBovespa[] resultado = new DataBovespa[index];
-            System.arraycopy(dataAux, 0, resultado, 0, index);
+            for (int j = 0; j < index; j++) {
+                resultado[j] = dataAux[j];
+            }
             return resultado;
         }catch (Exception e) {
             throw new RuntimeException(e);
