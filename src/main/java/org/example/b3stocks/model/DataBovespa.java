@@ -1,4 +1,4 @@
-package org.example.entity;
+package org.example.b3stocks.model;
 
 public class DataBovespa {
 

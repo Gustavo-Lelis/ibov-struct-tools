@@ -1,7 +1,7 @@
-package org.example.repository;
+/*package org.example.b3stocks.repository;
 
 import com.opencsv.CSVWriter;
-import org.example.entity.DataBovespa;
+import org.example.b3stocks.model.DataBovespa;
 
 
 import java.io.*;
@@ -81,6 +81,10 @@ public class FileRepository {
                 Files.createDirectories(outputDir);
             }
 
+            if (!Files.exists(outputPath)) {
+                Files.createFile(outputPath);
+            }
+
             try (CSVWriter writer = new CSVWriter(new FileWriter(outFileName))) {
                 String[] head = {"dataTime", "ticket", "open", "close", "high", "low", "volume"};
                 writer.writeNext(head);
@@ -137,6 +141,39 @@ public class FileRepository {
         }
     }
 
+    public void getHigherValueDailyAverage(DataBovespa[] dados,String fileName) throws FileNotFoundException {
+        DataBovespa[] dataAux = new DataBovespa[dados.length];
+        int index = 0;
+        try{
+            double i = 0;
+            double valorTotal = 0;
+            for(DataBovespa d : dados) {
+                if (d != null) {
+                    valorTotal += d.getVolume();
+                    i++;
+                }
+
+            }
+
+            double mediaTotal = valorTotal/i;
+
+            for (DataBovespa dt : dados) {
+                if (dt != null) {
+                    if (dt.getVolume() > mediaTotal) {
+                        dataAux[index++] = dt;
+                    }
+                }
+
+            }
+            writeToFile(fileName, dataAux);
+
+
+        }catch(Exception e){
+            throw new RuntimeException(e);
+        }
+
+    }
+
 
     public DataBovespa[] aumentarCapacidade(DataBovespa[] dateOrigin){
         DataBovespa[] novoArray = new DataBovespa[dateOrigin.length * 2];
@@ -144,3 +181,4 @@ public class FileRepository {
         return novoArray;
     }
 }
+*/
