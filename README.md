@@ -45,17 +45,17 @@ mvn clean compile
 Execute a aplicação:
 
 ```bash
-mvn exec:java -Dexec.mainClass="br.com.seupacote.Main"
+mvn exec:java -Dexec.mainClass="org.example.b3stocks.Main"
 ```
 
-Substitua `br.com.seupacote.Main` pelo nome completo do seu pacote e classe principal.
+Substitua `org.example.b3stocks.Main` pelo nome completo do seu pacote e classe principal.
 
 
  Transformações
 
  T1 — Conversão de Data
 
-- Converte datas de YYYY-MM-DD para DD/MM/YYYY.
+- Converte datas de YYYY-MM-DD para DD/MM/AAAA.
 
 - 📁 Gera: b3stocks_T1.csv
 
