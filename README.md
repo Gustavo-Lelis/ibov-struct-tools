@@ -1,4 +1,4 @@
-#ibov-struct-tools
+## ibov-struct-tools
 
 Este projeto realiza transformações e análises em um arquivo de transações da B3 (Bolsa de Valores Brasileira) utilizando Java e manipulação de arquivos CSV. Inclui tratamento de datas, filtragens condicionais e ordenações com múltiplos algoritmos de ordenação aplicados em diferentes cenários.
 
