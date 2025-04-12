@@ -13,7 +13,7 @@ public class ParseUtils {
 
         try {
             LocalDate dataOriginal = LocalDate.parse(colunas[0].trim());
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             String dataFormatadaStr = dataOriginal.format(formatter);
 
             return new DataBovespa(
