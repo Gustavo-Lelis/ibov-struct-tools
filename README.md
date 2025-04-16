@@ -15,6 +15,18 @@ Essas instruções te ajudarão a rodar o projeto localmente usando Maven.
 
 ---
 
+📂 Versões do Projeto
+
+Este projeto possui duas versões separadas, disponíveis em branches diferentes:
+
+🔁 Transformações
+
+- Branch: versao-transformacao
+
+📊 Ordenações
+
+- Branch: versao-ordenacao
+
 ## 📁 Arquivo de Dados (CSV)
 
 ⚠️ **Importante:** O arquivo `b3_stocks_1994_2020.csv` **não está incluso no repositório**, pois está listado no `.gitignore`. Você precisa adicioná-lo manualmente.
