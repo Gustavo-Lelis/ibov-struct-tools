@@ -4,17 +4,17 @@ public class DataBovespa {
 
     private int index;
     private String dateTime;
-    private String ticket;
+    private String ticker;
     private double open;
     private double close;
     private double high;
     private double low;
     private double volume;
 
-    public DataBovespa(int index, String dateTime, String ticket, double open, double close, double high, double low, double volume) {
+    public DataBovespa(int index, String dateTime, String ticker, double open, double close, double high, double low, double volume) {
         this.index = index;
         this.dateTime = dateTime;
-        this.ticket = ticket;
+        this.ticker = ticker;
         this.open = open;
         this.close = close;
         this.high = high;
@@ -41,12 +41,12 @@ public class DataBovespa {
         this.dateTime = dateTime;
     }
 
-    public String getTicket() {
-        return ticket;
+    public String getTicker() {
+        return ticker;
     }
 
     public void setTicket(String ticket) {
-        this.ticket = ticket;
+        this.ticker = ticket;
     }
 
     public double getOpen() {
@@ -89,10 +89,14 @@ public class DataBovespa {
         this.volume = volume;
     }
 
+    public double getFlutuacao() {
+        return this.high - this.low;
+    }
+
     public String[] toCSV() {
         return new String[] {
                 dateTime,
-                ticket,
+                ticker,
                 String.valueOf(open),
                 String.valueOf(close),
                 String.valueOf(high),

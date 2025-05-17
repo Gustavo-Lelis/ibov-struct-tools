@@ -6,7 +6,13 @@ import java.io.IOException;
 public class Main {
     public static void main(String[] args) throws IOException {
         B3StocksProcessor processor = new B3StocksProcessor();
-        processor.executarTodasTransformacoes();
-
+        //processor.executarTodasTransformacoes();
+        //processor.executandoMergeSort();
+        //processor.executandoHeapSort();
+        processor.executandoQuickSort();
+        //processor.executandoSelectionSort();
+        //processor.executandoQuickSortMediana();
+        //processor.executandoInsertionSort();
+        //processor.executandoCountingSort();
     }
 }
