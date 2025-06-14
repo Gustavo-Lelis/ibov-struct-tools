@@ -1,49 +1,45 @@
 package org.example.b3stocks.transform;
 
 import org.example.b3stocks.model.DataBovespa;
-import org.example.b3stocks.util.CSVUtils;
-
-import java.io.FileNotFoundException;
+import org.example.b3stocks.tad.conjuntoDinamico.ConjuntoDinamicoIF;
+import org.example.b3stocks.tad.conjuntoDinamico.MeuConjuntoDinamicoEncadeado;
+import org.example.b3stocks.tad.conjuntoDinamico.ConjuntoDinamicoVazioException;
+import org.example.b3stocks.tad.ElementoNaoEncontradoException;
 
 public class F1VolumeMaxFilter {
 
-    public static DataBovespa[] getMaxVolumeRecordPerDay(DataBovespa[] dados) throws FileNotFoundException {
-        DataBovespa[] dataAux = new DataBovespa[dados.length];
-        int index = 0;
+    public static ConjuntoDinamicoIF<DataBovespa> getMaxVolumeRecordPerDay(DataBovespa[] dados) {
+        ConjuntoDinamicoIF<DataBovespa> conjunto = new MeuConjuntoDinamicoEncadeado<>();
 
-        try{
-            int i = 0;
-            while (i < dados.length) {
-                if (dados[i] == null) {
-                    i++;
-                    continue;
-                }
-                DataBovespa registroAtual = dados[i];
-                DataBovespa maxRegistro = registroAtual; // inicializa com o primeiro registro do dia
-                String dataAtual = registroAtual.getDateTime(); // pega a data corrente
+        for (DataBovespa atual : dados) {
+            if (atual == null || atual.getDateTime() == null) continue;
 
-                // Percorre todos os registros com a mesma data
-                int j = i + 1;
-                while (j < dados.length &&
-                        dados[j] != null &&
-                        dados[j].getDateTime() != null &&
-                        dados[j].getDateTime().equals(dataAtual)) {
+            boolean substituido = false;
 
-                    if (dados[j].getVolume() > maxRegistro.getVolume()) {
-                        maxRegistro = dados[j];
+            for (DataBovespa existente : conjunto.toArray()) {
+                if (existente.getDateTime().equals(atual.getDateTime())) {
+                    if (atual.getVolume() > existente.getVolume()) {
+                        try {
+                            conjunto.remover(existente);
+                            conjunto.inserir(atual);
+                        } catch (Exception e) {
+                            throw new RuntimeException("Erro ao substituir item", e);
+                        }
                     }
-                    j++;
+                    substituido = true;
+                    break;
                 }
-                dataAux[index++] = maxRegistro;
-                i = j;
             }
-            DataBovespa[] resultado = new DataBovespa[index];
-            for (int j = 0; j < index; j++) {
-                resultado[j] = dataAux[j];
+
+            if (!substituido) {
+                try {
+                    conjunto.inserir(atual);
+                } catch (ElementoNaoEncontradoException e) {
+                    throw new RuntimeException("Erro ao inserir item novo", e);
+                }
             }
-            return resultado;
-        }catch (Exception e) {
-            throw new RuntimeException(e);
         }
+
+        return conjunto;
     }
 }
