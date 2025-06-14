@@ -13,6 +13,7 @@ public class Main {
         //processor.executandoSelectionSort();
         //processor.executandoQuickSortMediana();
         //processor.executandoInsertionSort();
+        //processor.executandoInsertionSortEncadeado();
         //processor.executandoCountingSort();
     }
 }

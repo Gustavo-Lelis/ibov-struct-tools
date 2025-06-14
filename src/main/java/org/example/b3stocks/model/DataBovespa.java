@@ -1,6 +1,7 @@
 package org.example.b3stocks.model;
 
-public class DataBovespa {
+public class DataBovespa implements Comparable<DataBovespa>
+ {
 
     private int index;
     private String dateTime;
@@ -105,4 +106,25 @@ public class DataBovespa {
         };
     }
 
-}
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+
+        DataBovespa that = (DataBovespa) obj;
+        return dateTime != null && dateTime.equals(that.dateTime);
+    }
+
+    @Override
+    public int hashCode() {
+        return dateTime != null ? dateTime.hashCode() : 0;
+    }
+
+     @Override
+     public int compareTo(DataBovespa outro) {
+         return this.dateTime.compareTo(outro.dateTime); // usa a data para ordenação natural
+     }
+
+
+
+ }

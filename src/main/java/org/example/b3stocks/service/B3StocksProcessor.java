@@ -3,15 +3,22 @@ package org.example.b3stocks.service;
 
 import org.example.b3stocks.model.DataBovespa;
 import org.example.b3stocks.sorting.*;
+import org.example.b3stocks.tad.conjuntoDinamico.ConjuntoDinamicoIF;
+import org.example.b3stocks.tad.listasEncadeadas.ListaEncadeadaImpl;
 import org.example.b3stocks.transform.F1VolumeMaxFilter;
 import org.example.b3stocks.transform.F2VolumeAboveAverage;
 import org.example.b3stocks.util.ArrayUtils;
 import org.example.b3stocks.util.CSVUtils;
+import org.example.b3stocks.tad.fila.MinhaFila;
+import org.example.b3stocks.tad.fila.FilaIF;
+import org.example.b3stocks.tad.fila.FilaCheiaException;
+import org.example.b3stocks.tad.fila.FilaVaziaException;
 
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.function.Consumer;
 
 public class B3StocksProcessor {
     private static final String INPUT_FILE = "b3_stocks_1994_2020.csv";
@@ -19,18 +26,64 @@ public class B3StocksProcessor {
     private static final String INPUT_FILE_F1 = "src\\main\\resources\\b3stocks_F1.csv";
     private static final String INPUT_FILE_AT1 = "src\\main\\resources\\b3stocks_AT1.csv";
 
-    public void executarTodasTransformacoes() throws IOException {
+    private void simularProcessamentoComFila(DataBovespa[] dados) {
+        FilaIF<DataBovespa> fila = new MinhaFila<>(dados.length);
 
-        DataBovespa[] dados = CSVUtils.readFromCSV(INPUT_FILE);
-        CSVUtils.writeToCSV(INPUT_FILE_T1, dados);
+        try {
+            // Enfileirando todos os dados para simular um buffer de processamento
+            for (DataBovespa d : dados) {
+                fila.enfileirar(d);
+            }
 
-        DataBovespa[] dadosFiltradosF1 = F1VolumeMaxFilter.getMaxVolumeRecordPerDay(dados);
-        CSVUtils.writeToCSV(INPUT_FILE_F1, dadosFiltradosF1);
+            // Simulando processamento FIFO dos dados
+            while (!fila.isEmpty()) {
+                DataBovespa processado = fila.desenfileirar();
+                System.out.println("Processando: " + processado.getTicker() + " | " + processado.getVolume());
+            }
 
-        DataBovespa[] dadosFiltradosF2 = F2VolumeAboveAverage.getHigherValueDailyAverage(dados);
-        CSVUtils.writeToCSV(INPUT_FILE_AT1, dadosFiltradosF2);
+        } catch (FilaCheiaException | FilaVaziaException e) {
+            e.printStackTrace();
+        }
     }
 
+    public void executarTodasTransformacoes() throws IOException, FilaVaziaException, FilaCheiaException {
+
+        DataBovespa[] dados = CSVUtils.readFromCSV(INPUT_FILE);
+
+        if (dados.length == 0) {
+            throw new IllegalStateException("Nenhum dado foi carregado do CSV de entrada.");
+        }
+
+        // Etapa 1: Enfileirando os dados em uma fila circular genérica
+        FilaIF<DataBovespa> fila = new MinhaFila<>(dados.length);
+
+        for (DataBovespa dado : dados) {
+            fila.enfileirar(dado); // Controle de fluxo com estrutura FIFO
+        }
+
+        // Etapa 2: Consumindo os dados da fila
+        DataBovespa[] dadosConsumidos = new DataBovespa[dados.length];
+        int i = 0;
+        while (!fila.isEmpty()) {
+            dadosConsumidos[i++] = fila.desenfileirar();
+        }
+
+        // Transformação T1 — salvando os dados consumidos da fila
+        CSVUtils.writeToCSV(INPUT_FILE_T1, dadosConsumidos);
+        System.out.println("Transformação T1 concluída.");
+
+        // Transformação F1 — com Conjunto Dinâmico
+        ConjuntoDinamicoIF<DataBovespa> dadosFiltradosF1 = F1VolumeMaxFilter.getMaxVolumeRecordPerDay(dadosConsumidos);
+        CSVUtils.writeToCSV(INPUT_FILE_F1, Arrays.asList(dadosFiltradosF1.toArray()));
+        System.out.println("Transformação F1 (maior volume por dia) concluída.");
+
+        // Transformação F2 — com Array
+        DataBovespa[] dadosFiltradosF2 = F2VolumeAboveAverage.getHigherValueDailyAverage(dadosConsumidos);
+        CSVUtils.writeToCSV(INPUT_FILE_AT1, dadosFiltradosF2);
+        System.out.println("Transformação F2 (volume acima da média) concluída.");
+    }
+
+    /*
     public void executandoInsertionSort() throws IOException {
         DataBovespa[] dados = CSVUtils.readFromCSV(INPUT_FILE);
         long tempoInicial;
@@ -112,7 +165,77 @@ public class B3StocksProcessor {
         CSVUtils.writeToCSV("src\\main\\resources\\b3stocks_flutuation_insertionSort_piorCaso.csv", resultadoFlutPior);
 
         System.out.println("=============================================================================");
+    }*/
+
+    public void executandoInsertionSortEncadeado() throws IOException {
+        DataBovespa[] dados = CSVUtils.readFromCSV(INPUT_FILE);
+
+        executarSortEncadeado("volume",
+                Comparator.comparingDouble(DataBovespa::getVolume),
+                InsertionSortListaEncadeada::ordenarPorVolume,
+                dados);
+
+        executarSortEncadeado("ticker",
+                Comparator.comparing(DataBovespa::getTicker),
+                InsertionSortListaEncadeada::ordenarPorTicker,
+                dados);
+
+        executarSortEncadeado("flutuation",
+                Comparator.comparingDouble(DataBovespa::getFlutuacao).reversed(),
+                InsertionSortListaEncadeada::ordenarPorFlutuacao,
+                dados);
     }
+
+    private void executarSortEncadeado(String campo,
+                                       Comparator<DataBovespa> comparador,
+                                       Consumer<ListaEncadeadaImpl<DataBovespa>> algoritmo,
+                                       DataBovespa[] baseDados) throws IOException {
+        System.out.println("=============================================================================");
+        System.out.println("Insertion Sort por " + campo.toUpperCase());
+
+        // === MÉDIO CASO ===
+        DataBovespa[] medio = ArrayUtils.embaralharArray(Arrays.copyOf(baseDados, baseDados.length));
+        ListaEncadeadaImpl<DataBovespa> listaMedio = toEncadeada(medio);
+        long ini = System.currentTimeMillis();
+        algoritmo.accept(listaMedio);
+        long fim = System.currentTimeMillis();
+        CSVUtils.writeToCSV("src/main/resources/b3stocks_" + campo + "_insertionSort_medioCaso.csv",
+                listaMedio.toArray(DataBovespa.class));
+        System.out.println("Executado o MÉDIO caso em = " + (fim - ini) + " ms");
+
+        // === MELHOR CASO ===
+        DataBovespa[] melhor = Arrays.copyOf(baseDados, baseDados.length);
+        Arrays.sort(melhor, comparador);
+        ListaEncadeadaImpl<DataBovespa> listaMelhor = toEncadeada(melhor);
+        ini = System.currentTimeMillis();
+        algoritmo.accept(listaMelhor);
+        fim = System.currentTimeMillis();
+        CSVUtils.writeToCSV("src/main/resources/b3stocks_" + campo + "_insertionSort_melhorCaso.csv",
+                listaMelhor.toArray(DataBovespa.class));
+        System.out.println("Executado o MELHOR caso em = " + (fim - ini) + " ms");
+
+        // === PIOR CASO ===
+        DataBovespa[] pior = Arrays.copyOf(baseDados, baseDados.length);
+        Arrays.sort(pior, comparador.reversed());
+        ListaEncadeadaImpl<DataBovespa> listaPior = toEncadeada(pior);
+        ini = System.currentTimeMillis();
+        algoritmo.accept(listaPior);
+        fim = System.currentTimeMillis();
+        CSVUtils.writeToCSV("src/main/resources/b3stocks_" + campo + "_insertionSort_piorCaso.csv",
+                listaPior.toArray(DataBovespa.class));
+        System.out.println("Executado o PIOR caso em = " + (fim - ini) + " ms");
+    }
+
+    private ListaEncadeadaImpl<DataBovespa> toEncadeada(DataBovespa[] dados) {
+        ListaEncadeadaImpl<DataBovespa> lista = new ListaEncadeadaImpl<>();
+        for (DataBovespa dado : dados) {
+            lista.insert(dado);
+        }
+        return lista;
+    }
+
+
+
 
     public void executandoSelectionSort() throws IOException {
         DataBovespa[] dados = CSVUtils.readFromCSV(INPUT_FILE);

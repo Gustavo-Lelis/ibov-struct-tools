@@ -41,6 +41,10 @@ public class CSVUtils {
     }
 
     public static void writeToCSV(String outFileName, DataBovespa[] dados) {
+        writeToCSV(outFileName, Arrays.asList(dados)); // reaproveita o novo método
+    }
+
+    public static void writeToCSV(String outFileName, Iterable<DataBovespa> dados) {
         try {
             Path outputPath = Paths.get(outFileName);
             Files.createDirectories(outputPath.getParent());
@@ -59,5 +63,5 @@ public class CSVUtils {
     }
 
 
-}
 
+}
